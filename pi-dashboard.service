@@ -1,0 +1,21 @@
+[Unit]
+Description=Pi Dashboard - System Metrics Monitor
+After=network.target
+
+[Service]
+Type=notify
+WorkingDirectory=/opt/pi-dashboard
+ExecStart=/home/noob/.dotnet/dotnet /opt/pi-dashboard/pi-dashboard.dll
+Restart=always
+RestartSec=5
+Environment=ASPNETCORE_ENVIRONMENT=Production
+Environment=ASPNETCORE_URLS=http://0.0.0.0:5062
+
+# Security hardening
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=read-only
+ReadOnlyPaths=/proc /sys
+
+[Install]
+WantedBy=multi-user.target

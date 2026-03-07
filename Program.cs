@@ -2,6 +2,7 @@ using pi_dashboard.Components;
 using pi_dashboard.Services;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Host.UseSystemd();
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
