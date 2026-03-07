@@ -1,0 +1,33 @@
+@using pi_dashboard.Models
+
+<div class="card h-100">
+    <div class="card-body">
+        <h5 class="card-title">System</h5>
+        <table class="table table-sm table-borderless mb-0">
+            <tbody>
+                <tr>
+                    <td class="text-muted">Hostname</td>
+                    <td><strong>@SystemInfo.Hostname</strong></td>
+                </tr>
+                <tr>
+                    <td class="text-muted">Uptime</td>
+                    <td><strong>@FormatUptime(SystemInfo.Uptime)</strong></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public SystemInfo SystemInfo { get; set; } = default!;
+
+    private static string FormatUptime(TimeSpan uptime)
+    {
+        if (uptime.TotalDays >= 1)
+            return $"{(int)uptime.TotalDays}d {uptime.Hours}h {uptime.Minutes}m";
+        if (uptime.TotalHours >= 1)
+            return $"{(int)uptime.TotalHours}h {uptime.Minutes}m";
+        return $"{(int)uptime.TotalMinutes}m";
+    }
+}

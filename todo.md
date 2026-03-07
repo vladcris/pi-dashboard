@@ -1,0 +1,4 @@
+ - Phase 2: SQLite storage for historical data (EF Core, retention policies)
+ - Phase 3: Charts/graphs with Chart.js or Blazor-ApexCharts
+ - Phase 4: Alerts (temp > 80C, memory > 90%, throttling detected)
+ - Phase 5: Docker container monitoring

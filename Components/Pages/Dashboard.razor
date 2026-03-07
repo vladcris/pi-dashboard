@@ -1,0 +1,66 @@
+@page "/"
+@rendermode InteractiveServer
+@using pi_dashboard.Models
+@using pi_dashboard.Services
+@using pi_dashboard.Components.Dashboard
+@inject MetricsStore Store
+@implements IDisposable
+
+<PageTitle>Pi Dashboard</PageTitle>
+
+@if (Store.Latest is null)
+{
+    <div class="d-flex justify-content-center align-items-center" style="min-height: 50vh;">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading metrics...</span>
+        </div>
+    </div>
+}
+else
+{
+    var snapshot = Store.Latest;
+
+    <div class="row g-3 mb-3">
+        <div class="col-md-6 col-lg-4">
+            <SystemInfoCard SystemInfo="snapshot.System" />
+        </div>
+        <div class="col-md-6 col-lg-4">
+            <TemperatureCard Temperature="snapshot.Temperature" />
+        </div>
+        <div class="col-md-12 col-lg-4">
+            <MemoryCard Memory="snapshot.Memory" />
+        </div>
+    </div>
+
+    <div class="row g-3 mb-3">
+        <div class="col-md-6">
+            <CpuCard Cpu="snapshot.Cpu" />
+        </div>
+        <div class="col-md-6">
+            <DiskCard Disk="snapshot.Disk" />
+        </div>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-12">
+            <ProcessTable Processes="snapshot.TopProcesses" />
+        </div>
+    </div>
+}
+
+@code {
+    protected override void OnInitialized()
+    {
+        Store.OnMetricsUpdated += OnMetricsUpdated;
+    }
+
+    private async void OnMetricsUpdated()
+    {
+        await InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        Store.OnMetricsUpdated -= OnMetricsUpdated;
+    }
+}

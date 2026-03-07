@@ -1,0 +1,34 @@
+@using pi_dashboard.Models
+
+<div class="card h-100">
+    <div class="card-body">
+        <h5 class="card-title">Temperature</h5>
+        <div class="d-flex align-items-center">
+            <span class="display-4 @GetTempColor(Temperature.CpuTempCelsius)">
+                @Temperature.CpuTempCelsius&deg;C
+            </span>
+        </div>
+        <div class="mt-2 small text-muted">
+            @GetTempStatus(Temperature.CpuTempCelsius)
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public TemperatureMetrics Temperature { get; set; } = default!;
+
+    private static string GetTempColor(double temp) => temp switch
+    {
+        >= 80 => "text-danger",
+        >= 65 => "text-warning",
+        _ => "text-success"
+    };
+
+    private static string GetTempStatus(double temp) => temp switch
+    {
+        >= 80 => "Throttling likely",
+        >= 65 => "Running warm",
+        _ => "Normal"
+    };
+}

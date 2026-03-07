@@ -1,0 +1,34 @@
+@using pi_dashboard.Models
+
+<div class="card h-100">
+    <div class="card-body">
+        <h5 class="card-title">Memory</h5>
+        <div class="d-flex justify-content-between">
+            <span>@FormatMB(Memory.UsedKB) / @FormatMB(Memory.TotalKB)</span>
+            <strong>@Memory.UsagePercent%</strong>
+        </div>
+        <div class="progress" style="height: 20px;">
+            <div class="progress-bar @GetBarColor(Memory.UsagePercent)"
+                 role="progressbar"
+                 style="width: @Memory.UsagePercent%">
+            </div>
+        </div>
+        <div class="mt-2 small text-muted">
+            Available: @FormatMB(Memory.AvailableKB)
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public MemoryMetrics Memory { get; set; } = default!;
+
+    private static string FormatMB(long kb) => $"{kb / 1024:N0} MB";
+
+    private static string GetBarColor(double percent) => percent switch
+    {
+        >= 90 => "bg-danger",
+        >= 70 => "bg-warning",
+        _ => "bg-success"
+    };
+}

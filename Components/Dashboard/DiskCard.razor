@@ -1,0 +1,34 @@
+@using pi_dashboard.Models
+
+<div class="card h-100">
+    <div class="card-body">
+        <h5 class="card-title">Disk (/)</h5>
+        <div class="d-flex justify-content-between">
+            <span>@FormatGB(Disk.UsedBytes) / @FormatGB(Disk.TotalBytes)</span>
+            <strong>@Disk.UsagePercent%</strong>
+        </div>
+        <div class="progress" style="height: 20px;">
+            <div class="progress-bar @GetBarColor(Disk.UsagePercent)"
+                 role="progressbar"
+                 style="width: @Disk.UsagePercent%">
+            </div>
+        </div>
+        <div class="mt-2 small text-muted">
+            Free: @FormatGB(Disk.FreeBytes)
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public DiskMetrics Disk { get; set; } = default!;
+
+    private static string FormatGB(long bytes) => $"{bytes / 1073741824.0:F1} GB";
+
+    private static string GetBarColor(double percent) => percent switch
+    {
+        >= 90 => "bg-danger",
+        >= 70 => "bg-warning",
+        _ => "bg-success"
+    };
+}
