@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using pi_dashboard.Models;
 
 namespace pi_dashboard.Services;
@@ -8,6 +9,7 @@ public class SystemMetricsCollector
     private long[]? _previousCpuIdles;
     private Dictionary<int, (long UserTime, long SystemTime, DateTime ReadTime)>? _previousProcessTimes;
     private readonly ILogger<SystemMetricsCollector> _logger;
+    private string? _voltAlarmPath; // cached on first call; "" means not found
 
     public SystemMetricsCollector(ILogger<SystemMetricsCollector> logger)
     {
@@ -23,6 +25,7 @@ public class SystemMetricsCollector
             Temperature: GetTemperatureMetrics(),
             Disk: GetDiskMetrics(),
             System: GetSystemInfo(),
+            Voltage: GetVoltageMetrics(),
             TopProcesses: GetTopProcesses()
         );
     }
@@ -97,7 +100,7 @@ public class SystemMetricsCollector
     private static MemoryMetrics GetMemoryMetrics()
     {
         var lines = File.ReadAllLines("/proc/meminfo");
-        long totalKB = 0, availableKB = 0;
+        long totalKB = 0, availableKB = 0, swapTotalKB = 0, swapFreeKB = 0, cachedKB = 0;
 
         foreach (var line in lines)
         {
@@ -105,12 +108,19 @@ public class SystemMetricsCollector
                 totalKB = ParseMemInfoValue(line);
             else if (line.StartsWith("MemAvailable:"))
                 availableKB = ParseMemInfoValue(line);
+            else if (line.StartsWith("SwapTotal:"))
+                swapTotalKB = ParseMemInfoValue(line);
+            else if (line.StartsWith("SwapFree:"))
+                swapFreeKB = ParseMemInfoValue(line);
+            else if (line.StartsWith("Cached:"))
+                cachedKB = ParseMemInfoValue(line);
         }
 
         long usedKB = totalKB - availableKB;
+        long swapUsedKB = swapTotalKB - swapFreeKB;
         double percent = totalKB > 0 ? Math.Round((double)usedKB / totalKB * 100, 1) : 0;
 
-        return new MemoryMetrics(totalKB, availableKB, usedKB, percent);
+        return new MemoryMetrics(totalKB, availableKB, usedKB, percent, swapTotalKB, swapUsedKB, cachedKB);
     }
 
     private static long ParseMemInfoValue(string line)
@@ -146,7 +156,84 @@ public class SystemMetricsCollector
         double uptimeSeconds = double.Parse(uptimeText);
         var uptime = TimeSpan.FromSeconds(uptimeSeconds);
 
-        return new SystemInfo(hostname, uptime);
+        string osDescription = System.Runtime.InteropServices.RuntimeInformation.OSDescription;
+        string architecture = System.Runtime.InteropServices.RuntimeInformation.ProcessArchitecture.ToString();
+
+        string kernelVersion = "";
+        try
+        {
+            var procVersion = File.ReadAllText("/proc/version").Trim();
+            var parts = procVersion.Split(' ');
+            kernelVersion = parts.Length >= 3 ? parts[2] : procVersion;
+        }
+        catch { }
+
+        return new SystemInfo(hostname, uptime, osDescription, kernelVersion, architecture);
+    }
+
+    private VoltageMetrics GetVoltageMetrics()
+    {
+        // Resolve hwmon path once — rpi_volt device numbering is fixed at boot
+        if (_voltAlarmPath == null)
+        {
+            try
+            {
+                foreach (var dir in Directory.GetDirectories("/sys/class/hwmon"))
+                {
+                    try
+                    {
+                        if (File.ReadAllText(Path.Combine(dir, "name")).Trim() == "rpi_volt")
+                        {
+                            _voltAlarmPath = Path.Combine(dir, "in0_lcrit_alarm");
+                            break;
+                        }
+                    }
+                    catch { }
+                }
+                _voltAlarmPath ??= ""; // mark as resolved even when not found
+            }
+            catch (Exception ex)
+            {
+                _logger.LogDebug(ex, "Could not scan hwmon for rpi_volt");
+                _voltAlarmPath = "";
+            }
+        }
+
+        double coreVoltage = 0;
+        try
+        {
+            using var proc = Process.Start(new ProcessStartInfo("vcgencmd", "measure_volts core")
+            {
+                RedirectStandardOutput = true,
+                UseShellExecute = false
+            });
+            if (proc != null)
+            {
+                var output = proc.StandardOutput.ReadToEnd().Trim(); // "volt=0.8918V"
+                proc.WaitForExit();
+                if (output.StartsWith("volt=") && output.EndsWith("V"))
+                    coreVoltage = Math.Round(double.Parse(output[5..^1]), 4);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogDebug(ex, "vcgencmd not available");
+        }
+
+        bool underVoltageAlarm = false;
+        if (!string.IsNullOrEmpty(_voltAlarmPath))
+        {
+            try
+            {
+                underVoltageAlarm = File.ReadAllText(_voltAlarmPath).Trim() == "1";
+            }
+            catch (Exception ex)
+            {
+                _logger.LogDebug(ex, "Could not read voltage alarm from {Path}", _voltAlarmPath);
+            }
+        }
+
+        return new VoltageMetrics(coreVoltage, underVoltageAlarm);
     }
 
     private List<ProcessInfo> GetTopProcesses()
@@ -169,9 +256,6 @@ public class SystemMetricsCollector
                 {
                     var statPath = $"/proc/{pid}/stat";
                     var statusPath = $"/proc/{pid}/status";
-
-                    if (!File.Exists(statPath) || !File.Exists(statusPath))
-                        continue;
 
                     var statContent = File.ReadAllText(statPath);
                     // Parse name from between parentheses (handles spaces in names)

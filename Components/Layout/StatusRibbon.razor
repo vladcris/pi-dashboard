@@ -1,0 +1,58 @@
+@rendermode InteractiveServer
+@using pi_dashboard.Services
+@using pi_dashboard.Models
+@inject MetricsStore Store
+@implements IDisposable
+
+<div class="tui-ribbon">
+    @if (Store.Latest is not null)
+    {
+        var s = Store.Latest;
+        <span class="tui-ribbon-stat">
+            <span class="tui-dot @TuiStyle.DotColor(s.Cpu.TotalUsagePercent, high: 90)"></span>
+            <span class="@TuiStyle.TextColor(s.Cpu.TotalUsagePercent, high: 90)">CPU @s.Cpu.TotalUsagePercent%</span>
+        </span>
+        <span class="tui-ribbon-sep">│</span>
+        <span class="tui-ribbon-stat">
+            <span class="tui-dot @TuiStyle.DotColor(s.Memory.UsagePercent)"></span>
+            <span class="@TuiStyle.TextColor(s.Memory.UsagePercent)">MEM @s.Memory.UsagePercent%</span>
+        </span>
+        <span class="tui-ribbon-sep">│</span>
+        <span class="tui-ribbon-stat">
+            <span class="tui-dot @TuiStyle.DotColor(s.Temperature.CpuTempCelsius, high: 80, low: 64)"></span>
+            <span class="@TuiStyle.TextColor(s.Temperature.CpuTempCelsius, high: 80, low: 64)">TEMP @s.Temperature.CpuTempCelsius°C</span>
+        </span>
+        <span class="tui-ribbon-sep">│</span>
+        @if (s.Voltage.CoreVoltage > 0)
+        {
+            <span class="tui-ribbon-stat">
+                <span class="tui-dot @(s.Voltage.UnderVoltageAlarm ? "tui-dot-crit" : "tui-dot-ok")"></span>
+                <span class="@(s.Voltage.UnderVoltageAlarm ? "tui-crit" : "tui-ok")">VOLT @s.Voltage.CoreVoltage.ToString("F4")V</span>
+            </span>
+            <span class="tui-ribbon-sep">│</span>
+        }
+        <span class="tui-muted">@s.System.Hostname</span>
+    }
+    else
+    {
+        <span class="tui-muted">connecting...</span>
+    }
+</div>
+
+@code {
+    protected override void OnInitialized()
+    {
+        Store.OnMetricsUpdated += OnMetricsUpdated;
+    }
+
+    private async void OnMetricsUpdated()
+    {
+        await InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        Store.OnMetricsUpdated -= OnMetricsUpdated;
+    }
+
+}

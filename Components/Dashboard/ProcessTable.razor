@@ -1,33 +1,32 @@
 @using pi_dashboard.Models
 
-<div class="card">
-    <div class="card-body">
-        <h5 class="card-title">Top Processes</h5>
-        <div class="table-responsive">
-            <table class="table table-sm table-striped mb-0">
-                <thead>
+<div class="tui-panel">
+    <div class="tui-panel-title">─ PROCESSES ─</div>
+
+    <div class="tui-panel-scroll">
+        <table class="tui-table">
+            <thead>
+                <tr>
+                    <th>PID</th>
+                    <th>Name</th>
+                    <th style="text-align:right">CPU %</th>
+                    <th style="text-align:right">Memory</th>
+                    <th>State</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var proc in Processes)
+                {
                     <tr>
-                        <th>PID</th>
-                        <th>Name</th>
-                        <th class="text-end">CPU %</th>
-                        <th class="text-end">Memory</th>
-                        <th>State</th>
+                        <td class="tui-muted">@proc.Pid</td>
+                        <td>@proc.Name</td>
+                        <td class="@CpuColor(proc.CpuPercent)" style="text-align:right">@proc.CpuPercent</td>
+                        <td class="tui-muted" style="text-align:right">@FormatMemory(proc.MemoryKB)</td>
+                        <td class="tui-muted">@StateLabel(proc.State)</td>
                     </tr>
-                </thead>
-                <tbody>
-                    @foreach (var proc in Processes)
-                    {
-                        <tr>
-                            <td>@proc.Pid</td>
-                            <td>@proc.Name</td>
-                            <td class="text-end">@proc.CpuPercent</td>
-                            <td class="text-end">@FormatMemory(proc.MemoryKB)</td>
-                            <td>@GetStateLabel(proc.State)</td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        </div>
+                }
+            </tbody>
+        </table>
     </div>
 </div>
 
@@ -37,12 +36,12 @@
 
     private static string FormatMemory(long kb) => kb switch
     {
-        >= 1048576 => $"{kb / 1048576.0:F1} GB",
-        >= 1024 => $"{kb / 1024.0:F1} MB",
-        _ => $"{kb} KB"
+        >= 1048576 => $"{kb / 1048576.0:F1}GB",
+        >= 1024    => $"{kb / 1024.0:F1}MB",
+        _          => $"{kb}KB"
     };
 
-    private static string GetStateLabel(string state) => state switch
+    private static string StateLabel(string state) => state switch
     {
         "R" => "Running",
         "S" => "Sleeping",
@@ -50,6 +49,8 @@
         "Z" => "Zombie",
         "T" => "Stopped",
         "I" => "Idle",
-        _ => state
+        _   => state
     };
+
+    private static string CpuColor(double p) => p >= 50 ? "tui-crit" : p >= 20 ? "tui-warn" : "";
 }
