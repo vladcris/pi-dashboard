@@ -1,34 +1,61 @@
 @using pi_dashboard.Models
 
-<div class="card h-100">
-    <div class="card-body">
-        <h5 class="card-title">Memory</h5>
-        <div class="d-flex justify-content-between">
-            <span>@FormatMB(Memory.UsedKB) / @FormatMB(Memory.TotalKB)</span>
-            <strong>@Memory.UsagePercent%</strong>
-        </div>
-        <div class="progress" style="height: 20px;">
-            <div class="progress-bar @GetBarColor(Memory.UsagePercent)"
-                 role="progressbar"
-                 style="width: @Memory.UsagePercent%">
-            </div>
-        </div>
-        <div class="mt-2 small text-muted">
-            Available: @FormatMB(Memory.AvailableKB)
-        </div>
+<div class="tui-panel">
+    <div class="tui-panel-title">─ MEMORY USAGE ─</div>
+
+    <div class="tui-row">
+        <span>
+            <span class="tui-dot @TuiStyle.DotColor(Memory.UsagePercent)"></span>
+            Memory: @FormatMB(Memory.UsedKB) / @FormatMB(Memory.TotalKB)
+        </span>
+        <span class="@TuiStyle.TextColor(Memory.UsagePercent)">@Memory.UsagePercent%</span>
     </div>
+    <div class="tui-progress">
+        <div class="tui-progress-fill @TuiStyle.BarClass(Memory.UsagePercent)" style="width: @Memory.UsagePercent%"></div>
+    </div>
+
+    <div class="tui-section-header">Memory Breakdown</div>
+
+    <table class="tui-table">
+        <thead>
+            <tr>
+                <th>Type</th>
+                <th>Usage</th>
+                <th style="text-align:right">Size</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td class="tui-muted">RAM Used</td>
+                <td class="@TuiStyle.TextColor(Memory.UsagePercent)">@Memory.UsagePercent%</td>
+                <td style="text-align:right">@FormatMB(Memory.UsedKB)</td>
+            </tr>
+            @if (Memory.SwapTotalKB > 0)
+            {
+                var swapPct = Math.Round((double)Memory.SwapUsedKB / Memory.SwapTotalKB * 100, 1);
+                <tr>
+                    <td class="tui-muted">Swap Used</td>
+                    <td class="@TuiStyle.TextColor(swapPct)">@swapPct%</td>
+                    <td style="text-align:right">@FormatMB(Memory.SwapUsedKB)</td>
+                </tr>
+            }
+            <tr>
+                <td class="tui-muted">Cache</td>
+                <td></td>
+                <td style="text-align:right">@FormatMB(Memory.CachedKB)</td>
+            </tr>
+            <tr>
+                <td class="tui-muted">Available</td>
+                <td class="@TuiStyle.TextColor(Memory.UsagePercent)">@(Math.Round(100 - Memory.UsagePercent, 0))%</td>
+                <td style="text-align:right">@FormatMB(Memory.AvailableKB)</td>
+            </tr>
+        </tbody>
+    </table>
 </div>
 
 @code {
     [Parameter, EditorRequired]
     public MemoryMetrics Memory { get; set; } = default!;
 
-    private static string FormatMB(long kb) => $"{kb / 1024:N0} MB";
-
-    private static string GetBarColor(double percent) => percent switch
-    {
-        >= 90 => "bg-danger",
-        >= 70 => "bg-warning",
-        _ => "bg-success"
-    };
+    private static string FormatMB(long kb) => $"{kb / 1024:N0}MB";
 }

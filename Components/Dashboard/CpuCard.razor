@@ -1,52 +1,38 @@
 @using pi_dashboard.Models
 
-<div class="card h-100">
-    <div class="card-body">
-        <h5 class="card-title">CPU</h5>
-        <div class="mb-2">
-            <div class="d-flex justify-content-between">
-                <span>Total</span>
-                <strong>@Cpu.TotalUsagePercent%</strong>
-            </div>
-            <div class="progress" style="height: 20px;">
-                <div class="progress-bar @GetBarColor(Cpu.TotalUsagePercent)"
-                     role="progressbar"
-                     style="width: @Cpu.TotalUsagePercent%">
-                </div>
-            </div>
-        </div>
+<div class="tui-panel">
+    <div class="tui-panel-title">─ CPU USAGE ─</div>
 
-        @for (int i = 0; i < Cpu.CoreUsagePercents.Length; i++)
-        {
-            var usage = Cpu.CoreUsagePercents[i];
-            <div class="mb-1">
-                <div class="d-flex justify-content-between small">
-                    <span>Core @i</span>
-                    <span>@usage%</span>
-                </div>
-                <div class="progress" style="height: 10px;">
-                    <div class="progress-bar @GetBarColor(usage)"
-                         role="progressbar"
-                         style="width: @usage%">
-                    </div>
-                </div>
-            </div>
-        }
-
-        <div class="mt-2 small text-muted">
-            Load: @Cpu.LoadAverage1Min / @Cpu.LoadAverage5Min / @Cpu.LoadAverage15Min
-        </div>
+    <div class="tui-row">
+        <span>
+            <span class="tui-dot @TuiStyle.DotColor(Cpu.TotalUsagePercent, high: 90)"></span>
+            Load: @Cpu.LoadAverage1Min / @Cpu.CoreUsagePercents.Length cores
+        </span>
+        <span class="@TuiStyle.TextColor(Cpu.TotalUsagePercent, high: 90)">@Cpu.TotalUsagePercent%</span>
     </div>
+    <div class="tui-progress">
+        <div class="tui-progress-fill @TuiStyle.BarClass(Cpu.TotalUsagePercent, high: 90)" style="width: @Cpu.TotalUsagePercent%"></div>
+    </div>
+
+    <div class="tui-metric-sub">Load Average: @Cpu.LoadAverage1Min, @Cpu.LoadAverage5Min, @Cpu.LoadAverage15Min</div>
+
+    <div class="tui-section-header">Per-Core</div>
+
+    @for (int i = 0; i < Cpu.CoreUsagePercents.Length; i++)
+    {
+        var usage = Cpu.CoreUsagePercents[i];
+        <div class="tui-row" style="font-size: 0.75rem;">
+            <span class="tui-muted">Core @i</span>
+            <span class="@TuiStyle.TextColor(usage, high: 90)">@usage%</span>
+        </div>
+        <div class="tui-progress slim">
+            <div class="tui-progress-fill @TuiStyle.BarClass(usage, high: 90)" style="width: @usage%"></div>
+        </div>
+    }
 </div>
 
 @code {
     [Parameter, EditorRequired]
     public CpuMetrics Cpu { get; set; } = default!;
 
-    private static string GetBarColor(double percent) => percent switch
-    {
-        >= 90 => "bg-danger",
-        >= 70 => "bg-warning",
-        _ => "bg-success"
-    };
 }

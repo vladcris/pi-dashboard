@@ -1,26 +1,63 @@
 @using pi_dashboard.Models
 
-<div class="card h-100">
-    <div class="card-body">
-        <h5 class="card-title">System</h5>
-        <table class="table table-sm table-borderless mb-0">
-            <tbody>
-                <tr>
-                    <td class="text-muted">Hostname</td>
-                    <td><strong>@SystemInfo.Hostname</strong></td>
-                </tr>
-                <tr>
-                    <td class="text-muted">Uptime</td>
-                    <td><strong>@FormatUptime(SystemInfo.Uptime)</strong></td>
-                </tr>
-            </tbody>
-        </table>
+<div class="tui-panel">
+    <div class="tui-panel-title">─ SYSTEM INFO ─</div>
+
+    <div style="margin-bottom: 0.6rem;">
+        <span class="tui-dot tui-dot-ok"></span>
+        <span class="tui-ok">@SystemInfo.Hostname</span>
     </div>
+
+    <div class="tui-section-header" style="margin-top: 0;">System</div>
+
+    <table class="tui-table">
+        <thead>
+            <tr>
+                <th>Property</th>
+                <th>Value</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td class="tui-muted">OS</td>
+                <td>@SystemInfo.OsDescription</td>
+            </tr>
+            <tr>
+                <td class="tui-muted">Kernel</td>
+                <td>@SystemInfo.KernelVersion</td>
+            </tr>
+            <tr>
+                <td class="tui-muted">Architecture</td>
+                <td>@SystemInfo.Architecture</td>
+            </tr>
+            <tr>
+                <td class="tui-muted">Uptime</td>
+                <td class="tui-info">@FormatUptime(SystemInfo.Uptime)</td>
+            </tr>
+            <tr>
+                <td class="tui-muted">Temperature</td>
+                <td class="@TuiStyle.TextColor(Temperature.CpuTempCelsius, high: 80, low: 64)">@Temperature.CpuTempCelsius°C</td>
+            </tr>
+            @if (Voltage.CoreVoltage > 0)
+            {
+                <tr>
+                    <td class="tui-muted">Core Voltage</td>
+                    <td class="@(Voltage.UnderVoltageAlarm ? "tui-crit" : "tui-ok")">@Voltage.CoreVoltage.ToString("F4")V</td>
+                </tr>
+            }
+        </tbody>
+    </table>
 </div>
 
 @code {
     [Parameter, EditorRequired]
     public SystemInfo SystemInfo { get; set; } = default!;
+
+    [Parameter, EditorRequired]
+    public VoltageMetrics Voltage { get; set; } = default!;
+
+    [Parameter, EditorRequired]
+    public TemperatureMetrics Temperature { get; set; } = default!;
 
     private static string FormatUptime(TimeSpan uptime)
     {

@@ -7,7 +7,13 @@ public record SystemSnapshot(
     TemperatureMetrics Temperature,
     DiskMetrics Disk,
     SystemInfo System,
+    VoltageMetrics Voltage,
     List<ProcessInfo> TopProcesses
+);
+
+public record VoltageMetrics(
+    double CoreVoltage,
+    bool UnderVoltageAlarm
 );
 
 public record CpuMetrics(
@@ -22,7 +28,10 @@ public record MemoryMetrics(
     long TotalKB,
     long AvailableKB,
     long UsedKB,
-    double UsagePercent
+    double UsagePercent,
+    long SwapTotalKB,
+    long SwapUsedKB,
+    long CachedKB
 );
 
 public record TemperatureMetrics(
@@ -46,5 +55,8 @@ public record ProcessInfo(
 
 public record SystemInfo(
     string Hostname,
-    TimeSpan Uptime
+    TimeSpan Uptime,
+    string OsDescription,
+    string KernelVersion,
+    string Architecture
 );

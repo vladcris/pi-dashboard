@@ -1,34 +1,46 @@
 @using pi_dashboard.Models
 
-<div class="card h-100">
-    <div class="card-body">
-        <h5 class="card-title">Disk (/)</h5>
-        <div class="d-flex justify-content-between">
-            <span>@FormatGB(Disk.UsedBytes) / @FormatGB(Disk.TotalBytes)</span>
-            <strong>@Disk.UsagePercent%</strong>
-        </div>
-        <div class="progress" style="height: 20px;">
-            <div class="progress-bar @GetBarColor(Disk.UsagePercent)"
-                 role="progressbar"
-                 style="width: @Disk.UsagePercent%">
-            </div>
-        </div>
-        <div class="mt-2 small text-muted">
-            Free: @FormatGB(Disk.FreeBytes)
-        </div>
+<div class="tui-panel">
+    <div class="tui-panel-title">─ DISK USAGE ─</div>
+
+    <div class="tui-row">
+        <span>
+            <span class="tui-dot @TuiStyle.DotColor(Disk.UsagePercent)"></span>
+            Main Filesystem: /
+        </span>
+        <span class="@TuiStyle.TextColor(Disk.UsagePercent)">@Disk.UsagePercent%</span>
     </div>
+    <div class="tui-progress">
+        <div class="tui-progress-fill @TuiStyle.BarClass(Disk.UsagePercent)" style="width: @Disk.UsagePercent%"></div>
+    </div>
+
+    <div class="tui-section-header">Filesystems</div>
+
+    <table class="tui-table">
+        <thead>
+            <tr>
+                <th>Mount</th>
+                <th style="text-align:right">Size</th>
+                <th style="text-align:right">Used</th>
+                <th style="text-align:right">Available</th>
+                <th style="text-align:right">Usage</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td class="tui-muted">/</td>
+                <td style="text-align:right">@FormatGB(Disk.TotalBytes)</td>
+                <td class="@TuiStyle.TextColor(Disk.UsagePercent)" style="text-align:right">@FormatGB(Disk.UsedBytes)</td>
+                <td class="tui-ok" style="text-align:right">@FormatGB(Disk.FreeBytes)</td>
+                <td class="@TuiStyle.TextColor(Disk.UsagePercent)" style="text-align:right">@Disk.UsagePercent%</td>
+            </tr>
+        </tbody>
+    </table>
 </div>
 
 @code {
     [Parameter, EditorRequired]
     public DiskMetrics Disk { get; set; } = default!;
 
-    private static string FormatGB(long bytes) => $"{bytes / 1073741824.0:F1} GB";
-
-    private static string GetBarColor(double percent) => percent switch
-    {
-        >= 90 => "bg-danger",
-        >= 70 => "bg-warning",
-        _ => "bg-success"
-    };
+    private static string FormatGB(long bytes) => $"{bytes / 1073741824.0:F1}GB";
 }

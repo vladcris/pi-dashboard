@@ -10,41 +10,18 @@
 
 @if (Store.Latest is null)
 {
-    <div class="d-flex justify-content-center align-items-center" style="min-height: 50vh;">
-        <div class="spinner-border text-primary" role="status">
-            <span class="visually-hidden">Loading metrics...</span>
-        </div>
-    </div>
+    <div class="tui-loading">[ CONNECTING... ]</div>
 }
 else
 {
     var snapshot = Store.Latest;
-
-    <div class="row g-3 mb-3">
-        <div class="col-md-6 col-lg-4">
-            <SystemInfoCard SystemInfo="snapshot.System" />
-        </div>
-        <div class="col-md-6 col-lg-4">
-            <TemperatureCard Temperature="snapshot.Temperature" />
-        </div>
-        <div class="col-md-12 col-lg-4">
-            <MemoryCard Memory="snapshot.Memory" />
-        </div>
-    </div>
-
-    <div class="row g-3 mb-3">
-        <div class="col-md-6">
-            <CpuCard Cpu="snapshot.Cpu" />
-        </div>
-        <div class="col-md-6">
-            <DiskCard Disk="snapshot.Disk" />
-        </div>
-    </div>
-
-    <div class="row g-3">
-        <div class="col-12">
-            <ProcessTable Processes="snapshot.TopProcesses" />
-        </div>
+    <div class="tui-grid">
+        <AlertsCard Snapshot="snapshot" />
+        <CpuCard Cpu="snapshot.Cpu" />
+        <MemoryCard Memory="snapshot.Memory" />
+        <DiskCard Disk="snapshot.Disk" />
+        <SystemInfoCard SystemInfo="snapshot.System" Voltage="snapshot.Voltage" Temperature="snapshot.Temperature" />
+        <ProcessTable Processes="snapshot.TopProcesses" />
     </div>
 }
 

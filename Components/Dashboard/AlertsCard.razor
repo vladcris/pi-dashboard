@@ -1,0 +1,84 @@
+@using pi_dashboard.Models
+
+<div class="tui-panel">
+    <div class="tui-panel-title">─ SYSTEM ALERTS ─</div>
+
+    @{
+        var checks = GetHealthChecks(Snapshot);
+        int critCount = 0, warnCount = 0;
+        foreach (var c in checks)
+        {
+            if (c.Status == "Critical") critCount++;
+            else if (c.Status == "Warning") warnCount++;
+        }
+    }
+
+    <div style="margin-bottom: 0.6rem; font-size: 0.78rem;">
+        <span class="tui-dot @(critCount > 0 ? "tui-dot-crit" : "tui-dot-ok")"></span>
+        <span class="@(critCount > 0 ? "tui-crit" : "tui-ok")">Critical: @critCount</span>
+        <span class="tui-muted" style="margin: 0 0.4rem;">│</span>
+        <span class="@(warnCount > 0 ? "tui-warn" : "tui-muted")">Warnings: @warnCount</span>
+    </div>
+
+    <div class="tui-section-header" style="margin-top: 0;">Health Checks</div>
+
+    <table class="tui-table">
+        <thead>
+            <tr>
+                <th>Check</th>
+                <th>Status</th>
+                <th>Details</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var check in checks)
+            {
+                <tr>
+                    <td class="tui-muted">@check.Name</td>
+                    <td class="@StatusClass(check.Status)">@check.Status</td>
+                    <td>@check.Details</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public SystemSnapshot Snapshot { get; set; } = default!;
+
+    private record HealthCheck(string Name, string Status, string Details);
+
+    private static List<HealthCheck> GetHealthChecks(SystemSnapshot s)
+    {
+        var checks = new List<HealthCheck>
+        {
+            Threshold("CPU Load",    s.Cpu.TotalUsagePercent,      critAt: 90, warnAt: 70, unit: "%",  okDetail: "< 70%"),
+            Threshold("Memory",      s.Memory.UsagePercent,         critAt: 85, warnAt: 70, unit: "%",  okDetail: "< 70%"),
+            Threshold("Disk",        s.Disk.UsagePercent,           critAt: 85, warnAt: 70, unit: "%",  okDetail: "< 70%"),
+            Threshold("Temperature", s.Temperature.CpuTempCelsius,  critAt: 79, warnAt: 64, unit: "°C", okDetail: "< 64°C"),
+        };
+
+        if (s.Voltage.UnderVoltageAlarm)
+            checks.Add(new("Power Supply", "Critical", "under-voltage detected"));
+        else if (s.Voltage.CoreVoltage > 0)
+            checks.Add(new("Power Supply", "OK", $"{s.Voltage.CoreVoltage:F4}V core"));
+
+        return checks;
+    }
+
+    private static HealthCheck Threshold(string name, double value, double critAt, double warnAt, string unit, string okDetail)
+    {
+        if (value >= critAt) return new(name, "Critical", $"at {value}{unit}");
+        if (value >= warnAt) return new(name, "Warning",  $"at {value}{unit}");
+        return new(name, "OK", okDetail);
+    }
+
+    private static string StatusClass(string status) => status switch
+    {
+        "Critical" => "tui-crit",
+        "Warning"  => "tui-warn",
+        "OK"       => "tui-ok",
+        _          => "tui-info"
+    };
+}
