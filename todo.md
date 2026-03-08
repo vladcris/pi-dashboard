@@ -1,6 +1,3 @@
-# Infrastructure
-- Cloudflare tunnel set up → https://dashboard.threepie.win (service: cloudflared, config: /etc/cloudflared/config.yml)
-
 # Roadmap
  - Phase 2: SQLite storage for historical data (EF Core, retention policies)
  - Phase 3: Charts/graphs with Chart.js or Blazor-ApexCharts
