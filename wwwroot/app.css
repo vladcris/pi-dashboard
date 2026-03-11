@@ -42,13 +42,18 @@ html, body {
 .tui-navbar {
     background: #090f18;
     border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 101;
+}
+
+.tui-navbar-inner {
+    max-width: 1400px;
+    margin: 0 auto;
     padding: 0.5rem 6%;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    position: sticky;
-    top: 0;
-    z-index: 101;
 }
 
 .tui-navbar-brand {
@@ -279,6 +284,102 @@ html, body {
     position: absolute;
     right: 0.75rem;
     top: 0.4rem;
+}
+
+/* ─── Cheat Sheet Page ─── */
+.cheatsheet-page {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 1.5rem 6%;
+}
+
+.cheatsheet-page h1 {
+    color: var(--accent);
+    font-size: 0.85rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--border-bright);
+    padding-bottom: 0.4rem;
+    margin-bottom: 1.5rem;
+}
+
+.cheatsheet-page h2 {
+    color: var(--accent);
+    font-size: 0.75rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    border-left: 3px solid var(--border-bright);
+    padding-left: 0.6rem;
+    margin-top: 2rem;
+    margin-bottom: 0.75rem;
+}
+
+.cheatsheet-page h3 {
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+    margin-top: 1.2rem;
+    margin-bottom: 0.4rem;
+}
+
+.cheatsheet-page blockquote {
+    border-left: 2px solid var(--border);
+    margin: 0 0 1rem 0;
+    padding-left: 0.75rem;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+}
+
+.cheatsheet-page ul {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 0.5rem 0;
+}
+
+.cheatsheet-page li {
+    padding: 0.2rem 0;
+    font-size: 0.88rem;
+    border-bottom: 1px solid rgba(29, 92, 92, 0.15);
+    display: flex;
+    gap: 0.6rem;
+    align-items: baseline;
+}
+
+.cheatsheet-page li::before {
+    content: '›';
+    color: var(--border-bright);
+    flex-shrink: 0;
+}
+
+.cheatsheet-page li:last-child {
+    border-bottom: none;
+}
+
+.cheatsheet-page code {
+    background: var(--panel-bg-deep);
+    border: 1px solid var(--border);
+    color: var(--status-info);
+    padding: 0.1em 0.4em;
+    font-family: inherit;
+    font-size: 0.85em;
+    white-space: nowrap;
+}
+
+.cheatsheet-page pre {
+    background: var(--panel-bg-deep);
+    border: 1px solid var(--border);
+    padding: 0.75rem 1rem;
+    overflow-x: auto;
+    margin: 0.5rem 0 1rem;
+}
+
+.cheatsheet-page pre code {
+    background: none;
+    border: none;
+    padding: 0;
+    color: var(--text);
+    font-size: 0.85rem;
+    white-space: pre;
 }
 
 /* ─── Form validation (keep minimal) ─── */

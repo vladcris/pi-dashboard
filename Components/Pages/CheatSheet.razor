@@ -1,0 +1,37 @@
+@page "/cheat-sheet"
+@using Markdig
+
+<PageTitle>Cheat Sheet</PageTitle>
+
+<div class="cheatsheet-page">
+    @if (_html is not null)
+    {
+        @((MarkupString)_html)
+    }
+    else if (_error is not null)
+    {
+        <p class="tui-crit">Error loading cheat sheet: @_error</p>
+    }
+    else
+    {
+        <div class="tui-loading">[ LOADING... ]</div>
+    }
+</div>
+
+@code {
+    private string? _html;
+    private string? _error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var markdown = await File.ReadAllTextAsync("/home/noob/cheat-sheet.md");
+            _html = Markdown.ToHtml(markdown, new MarkdownPipelineBuilder().UseAdvancedExtensions().Build());
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+        }
+    }
+}
